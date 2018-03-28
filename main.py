@@ -1,4 +1,5 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import sys
 import numpy as np
 import tensorflow as tf
@@ -10,6 +11,7 @@ from capsNet import CapsNet
 
 
 def save_to():
+    tf.logging.info('save_to.')
     if not os.path.exists(cfg.results):
         os.mkdir(cfg.results)
     if cfg.is_training:
@@ -41,18 +43,23 @@ def save_to():
 
 
 def train(model, supervisor, num_label):
+    tf.logging.info('Start train...')
+    tf.logging.info('load_data.')
     trX, trY, num_tr_batch, valX, valY, num_val_batch = load_data(cfg.dataset, cfg.batch_size, is_training=True)
+    tf.logging.info('reshaping.')
     Y = valY[:num_val_batch * cfg.batch_size].reshape((-1, 1))
 
     fd_train_acc, fd_loss, fd_val_acc = save_to()
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
+    config = tf.ConfigProto(allow_soft_placement=True,
+                                        log_device_placement=True)
+    config.gpu_options.allow_growth = False
+    tf.logging.info('configd.')
     with supervisor.managed_session(config=config) as sess:
-        print("\nNote: all of results will be saved to directory: " + cfg.results)
+        tf.logging.info("Note: all of results will be saved to directory: " + cfg.results)
         for epoch in range(cfg.epoch):
-            print("Training for epoch %d/%d:" % (epoch, cfg.epoch))
+            tf.logging.info("Training for epoch %d/%d:" % (epoch, cfg.epoch))
             if supervisor.should_stop():
-                print('supervisor stoped!')
+                tf.logging.info('supervisor stoped!')
                 break
             for step in tqdm(range(num_tr_batch), total=num_tr_batch, ncols=70, leave=False, unit='b'):
                 start = step * cfg.batch_size
@@ -106,21 +113,22 @@ def evaluation(model, supervisor, num_label):
         test_acc = test_acc / (cfg.batch_size * num_te_batch)
         fd_test_acc.write(str(test_acc))
         fd_test_acc.close()
-        print('Test accuracy has been saved to ' + cfg.results + '/test_acc.csv')
+        tf.logging.info('Test accuracy has been saved to ' + cfg.results + '/test_acc.csv')
 
 
 def main(_):
-    tf.logging.info(' Loading Graph...')
+    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.info('Loading Graph...')
     num_label = 10
     model = CapsNet()
-    tf.logging.info(' Graph loaded')
+    tf.logging.info('Graph loaded.')
 
     sv = tf.train.Supervisor(graph=model.graph, logdir=cfg.logdir, save_model_secs=0)
 
     if cfg.is_training:
-        tf.logging.info(' Start training...')
+        tf.logging.info('Start training...')
         train(model, sv, num_label)
-        tf.logging.info('Training done')
+        tf.logging.info('Training done.')
     else:
         evaluation(model, sv, num_label)
 

@@ -5,7 +5,7 @@ sys.path.append('.')
 import tensorflow as tf
 from config import cfg
 from utils import load_mnist
-import dist_version.capsnet_slim as net
+import capsnet_slim as net
 import time
 import tensorflow.contrib.slim as slim
 import re
@@ -129,7 +129,7 @@ def main(_):
         for step in range(cfg.epoch*num_batches_per_epoch):
             tic = time.time()
             _, loss_value = sess.run([train_op, loss])
-            print(str(time.time()-tic)+' '+str(step))
+            tf.logging.info(str(time.time()-tic)+' '+str(step))
 
             assert not np.isnan(loss_value)
 

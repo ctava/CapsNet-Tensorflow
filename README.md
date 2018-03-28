@@ -1,3 +1,9 @@
+# Hacking with docker - just 4 commands to execute:
+docker build -t ctava/capsnet .
+docker run -v /go/src/github.com/ctava/CapsNet-Tensorflow:/go/src/github.com/ctava/CapsNet-Tensorflow -it --security-opt=seccomp:unconfined -p 8888:8888 ctava/capsnet:latest
+python download_data.py
+python main.py
+
 # CapsNet-Tensorflow
 
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=plastic)](CONTRIBUTING.md)

@@ -2,7 +2,7 @@ import os
 import scipy
 import numpy as np
 import tensorflow as tf
-
+from config import cfg
 
 def load_mnist(batch_size, is_training=True):
     path = os.path.join('data', 'mnist')
@@ -15,15 +15,15 @@ def load_mnist(batch_size, is_training=True):
         loaded = np.fromfile(file=fd, dtype=np.uint8)
         trainY = loaded[8:].reshape((60000)).astype(np.int32)
 
-        trX = trainX[:55000] / 255.
-        trY = trainY[:55000]
+        trX = trainX[:cfg.batch_size] / 255.
+        trY = trainY[:cfg.batch_size]
 
-        valX = trainX[55000:, ] / 255.
-        valY = trainY[55000:]
+        valX = trainX[cfg.batch_size:, ] / 255.
+        valY = trainY[cfg.batch_size:]
 
-        num_tr_batch = 55000 // batch_size
-        num_val_batch = 5000 // batch_size
-
+        num_tr_batch = int(cfg.batch_size)
+        num_val_batch = int(cfg.batch_size)
+        #return trX, trY
         return trX, trY, num_tr_batch, valX, valY, num_val_batch
     else:
         fd = open(os.path.join(path, 't10k-images-idx3-ubyte'))
@@ -34,7 +34,7 @@ def load_mnist(batch_size, is_training=True):
         loaded = np.fromfile(file=fd, dtype=np.uint8)
         teY = loaded[8:].reshape((10000)).astype(np.int32)
 
-        num_te_batch = 10000 // batch_size
+        num_te_batch = int(10000)
         return teX / 255., teY, num_te_batch
 
 
@@ -84,16 +84,8 @@ def load_data(dataset, batch_size, is_training=True, one_hot=False):
 def get_batch_data(dataset, batch_size, num_threads):
     if dataset == 'mnist':
         trX, trY, num_tr_batch, valX, valY, num_val_batch = load_mnist(batch_size, is_training=True)
-    elif dataset == 'fashion-mnist':
-        trX, trY, num_tr_batch, valX, valY, num_val_batch = load_fashion_mnist(batch_size, is_training=True)
-    data_queues = tf.train.slice_input_producer([trX, trY])
-    X, Y = tf.train.shuffle_batch(data_queues, num_threads=num_threads,
-                                  batch_size=batch_size,
-                                  capacity=batch_size * 64,
-                                  min_after_dequeue=batch_size * 32,
-                                  allow_smaller_final_batch=False)
 
-    return(X, Y)
+    return trX, trY
 
 
 def save_images(imgs, size, path):

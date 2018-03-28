@@ -46,6 +46,7 @@ class CapsNet(object):
             conv1 = tf.contrib.layers.conv2d(self.X, num_outputs=256,
                                              kernel_size=9, stride=1,
                                              padding='VALID')
+            #print conv1.get_shape()
             assert conv1.get_shape() == [cfg.batch_size, 20, 20, 256]
 
         # Primary Capsules layer, return [batch_size, 1152, 8, 1]
@@ -93,7 +94,7 @@ class CapsNet(object):
                 self.masked_v = tf.multiply(tf.squeeze(self.caps2), tf.reshape(self.Y, (-1, 10, 1)))
                 self.v_length = tf.sqrt(reduce_sum(tf.square(self.caps2), axis=2, keepdims=True) + epsilon)
 
-        # 2. Reconstructe the MNIST images with 3 FC layers
+        # 2. Reconstruct the MNIST images with 3 FC layers
         # [batch_size, 1, 16, 1] => [batch_size, 16] => [batch_size, 512]
         with tf.variable_scope('Decoder'):
             vector_j = tf.reshape(self.masked_v, shape=(cfg.batch_size, -1))
